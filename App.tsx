@@ -9,7 +9,6 @@ import Footer from './components/Footer';
 import AdminPanel from './components/AdminPanel';
 import { SyncStatus } from './components/SyncStatus';
 import { DataProvider } from './context/DataContext';
-import './config/firebase'; // Inicializar Firebase
 
 function AppContent() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);

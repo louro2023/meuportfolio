@@ -28,6 +28,7 @@ export interface ProfileImageRTDB {
 export const projectsServiceRTDB = {
   async getAll(): Promise<Project[]> {
     try {
+      if (!db) throw new Error('Firebase não configurado');
       const snapshot = await get(ref(db, 'projects'));
       if (!snapshot.exists()) {
         return [];
@@ -45,6 +46,7 @@ export const projectsServiceRTDB = {
 
   async add(project: Omit<Project, 'id'>): Promise<string> {
     try {
+      if (!db) throw new Error('Firebase não configurado');
       const projectsRef = ref(db, 'projects');
       const newProjectRef = push(projectsRef);
       await set(newProjectRef, {
@@ -61,6 +63,7 @@ export const projectsServiceRTDB = {
 
   async update(id: string, project: Partial<Project>): Promise<void> {
     try {
+      if (!db) throw new Error('Firebase não configurado');
       await update(ref(db, `projects/${id}`), {
         ...project,
         updatedAt: serverTimestamp(),
@@ -73,6 +76,7 @@ export const projectsServiceRTDB = {
 
   async delete(id: string): Promise<void> {
     try {
+      if (!db) throw new Error('Firebase não configurado');
       await remove(ref(db, `projects/${id}`));
     } catch (error) {
       console.error('Erro ao deletar projeto:', error);
@@ -85,6 +89,7 @@ export const projectsServiceRTDB = {
 export const contactServiceRTDB = {
   async get(): Promise<ContactInfoRTDB | null> {
     try {
+      if (!db) throw new Error('Firebase não configurado');
       const snapshot = await get(ref(db, 'portfolio/contactInfo'));
       if (snapshot.exists()) {
         return snapshot.val() as ContactInfoRTDB;
@@ -98,6 +103,7 @@ export const contactServiceRTDB = {
 
   async update(data: ContactInfoRTDB): Promise<void> {
     try {
+      if (!db) throw new Error('Firebase não configurado');
       await set(ref(db, 'portfolio/contactInfo'), {
         ...data,
         updatedAt: serverTimestamp(),
@@ -113,6 +119,7 @@ export const contactServiceRTDB = {
 export const profileServiceRTDB = {
   async get(): Promise<ProfileImageRTDB | null> {
     try {
+      if (!db) throw new Error('Firebase não configurado');
       const snapshot = await get(ref(db, 'portfolio/profileImage'));
       if (snapshot.exists()) {
         return snapshot.val() as ProfileImageRTDB;
@@ -126,6 +133,7 @@ export const profileServiceRTDB = {
 
   async update(url: string): Promise<void> {
     try {
+      if (!db) throw new Error('Firebase não configurado');
       await set(ref(db, 'portfolio/profileImage'), {
         url,
         updatedAt: serverTimestamp(),

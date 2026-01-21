@@ -3,6 +3,13 @@ import { Project } from '../types';
 import { PROJECTS as INITIAL_PROJECTS, CONTACT_INFO as INITIAL_CONTACT_INFO } from '../constants';
 import { projectsServiceRTDB, contactServiceRTDB, profileServiceRTDB } from '../services/firebaseRealtimeService';
 
+// Inicializar Firebase de forma segura
+try {
+  import('../config/firebase');
+} catch (error) {
+  console.warn('Firebase não disponível');
+}
+
 interface ContactInfo {
   whatsappNumber: string;
   location: string;
@@ -44,45 +51,58 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         setIsLoading(true);
 
-        // Carregar imagem de perfil
-        const profileData = await profileServiceRTDB.get();
-        if (profileData?.url) {
-          setProfileImage(profileData.url);
-        } else {
+        // Tentar carregar do Firebase, com fallback para localStorage
+        try {
+          // Carregar imagem de perfil
+          const profileData = await profileServiceRTDB.get();
+          if (profileData?.url) {
+            setProfileImage(profileData.url);
+          } else {
+            throw new Error('Firebase não disponível');
+          }
+        } catch {
           const savedImage = localStorage.getItem('dev_portfolio_image');
           if (savedImage) setProfileImage(savedImage);
         }
 
-        // Carregar projetos
-        const projectsData = await projectsServiceRTDB.getAll();
-        if (projectsData && projectsData.length > 0) {
-          setProjects(projectsData);
-        } else {
+        try {
+          // Carregar projetos
+          const projectsData = await projectsServiceRTDB.getAll();
+          if (projectsData && projectsData.length > 0) {
+            setProjects(projectsData);
+          } else {
+            throw new Error('Firebase não disponível');
+          }
+        } catch {
           const savedProjects = localStorage.getItem('dev_portfolio_projects');
           if (savedProjects) {
             setProjects(JSON.parse(savedProjects));
           }
         }
 
-        // Carregar informações de contato
-        const contactData = await contactServiceRTDB.get();
-        if (contactData) {
-          setContactInfo({
-            name: contactData.name,
-            role: contactData.role,
-            whatsappNumber: contactData.whatsappNumber,
-            email: contactData.email,
-            location: contactData.location,
-          });
-        } else {
+        try {
+          // Carregar informações de contato
+          const contactData = await contactServiceRTDB.get();
+          if (contactData) {
+            setContactInfo({
+              name: contactData.name,
+              role: contactData.role,
+              whatsappNumber: contactData.whatsappNumber,
+              email: contactData.email,
+              location: contactData.location,
+            });
+          } else {
+            throw new Error('Firebase não disponível');
+          }
+        } catch {
           const savedContact = localStorage.getItem('dev_portfolio_contact');
           if (savedContact) {
             setContactInfo(JSON.parse(savedContact));
           }
         }
       } catch (error) {
-        console.error('Erro ao carregar dados do Firebase:', error);
-        // Fallback para localStorage se Firebase falhar
+        console.error('Erro ao carregar dados:', error);
+        // Fallback para localStorage se tudo falhar
         const savedImage = localStorage.getItem('dev_portfolio_image');
         const savedProjects = localStorage.getItem('dev_portfolio_projects');
         const savedContact = localStorage.getItem('dev_portfolio_contact');
