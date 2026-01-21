@@ -127,10 +127,9 @@ export const projectsServiceRTDB = {
         updatedAt: serverTimestamp(),
       });
       
-      console.log('✅ Projeto adicionado com sucesso no Firebase:', newId);
       return newId;
     } catch (error: any) {
-      console.error('❌ Erro ao adicionar projeto no Firebase:', error.message, error);
+      console.error('Erro ao adicionar projeto:', error.message);
       throw error;
     }
   },
@@ -142,9 +141,8 @@ export const projectsServiceRTDB = {
         ...project,
         updatedAt: serverTimestamp(),
       });
-      console.log('✅ Projeto atualizado com sucesso no Firebase:', id);
     } catch (error: any) {
-      console.error('❌ Erro ao atualizar projeto no Firebase:', error.message, error);
+      console.error('Erro ao atualizar projeto:', error.message);
       throw error;
     }
   },
@@ -153,9 +151,8 @@ export const projectsServiceRTDB = {
     try {
       if (!db) throw new Error('Firebase não configurado');
       await remove(ref(db, `projects/${id}`));
-      console.log('✅ Projeto deletado com sucesso no Firebase:', id);
     } catch (error: any) {
-      console.error('❌ Erro ao deletar projeto no Firebase:', error.message, error);
+      console.error('Erro ao deletar projeto:', error.message);
       throw error;
     }
   },
@@ -210,9 +207,8 @@ export const contactServiceRTDB = {
         ...data,
         updatedAt: serverTimestamp(),
       });
-      console.log('✅ Informações de contato atualizadas no Firebase');
     } catch (error: any) {
-      console.error('❌ Erro ao atualizar contato no Firebase:', error.message, error);
+      console.error('Erro ao atualizar contato:', error.message);
       throw error;
     }
   },
@@ -267,9 +263,8 @@ export const profileServiceRTDB = {
         url,
         updatedAt: serverTimestamp(),
       });
-      console.log('✅ Imagem de perfil atualizada no Firebase:', url.substring(0, 50) + '...');
     } catch (error: any) {
-      console.error('❌ Erro ao atualizar imagem no Firebase:', error.message, error);
+      console.error('Erro ao atualizar imagem:', error.message);
       throw error;
     }
   },

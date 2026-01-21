@@ -44,9 +44,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Estado de carregamento
   const [, setIsLoading] = useState(true);
-  
-  // Estado para rastrear se já carregou do Firebase (evita flicker)
-  const [isFirebaseLoaded, setIsFirebaseLoaded] = useState(false);
 
   // Carregar dados do Firebase ao iniciar e escutar mudanças em tempo real
   useEffect(() => {
@@ -59,10 +56,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const profileData = await profileServiceRTDB.get();
           if (profileData?.url) {
             setProfileImage(profileData.url);
-            console.log('✅ Imagem de perfil carregada do Firebase');
           }
         } catch (error) {
-          console.warn('⚠️ Erro ao carregar imagem do Firebase, tentando localStorage');
           const savedImage = localStorage.getItem('dev_portfolio_image');
           if (savedImage) setProfileImage(savedImage);
         }
@@ -72,12 +67,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const projectsData = await projectsServiceRTDB.getAll();
           if (projectsData && projectsData.length > 0) {
             setProjects(projectsData);
-            console.log('✅ Projetos carregados do Firebase:', projectsData.length);
-          } else {
-            console.log('ℹ️ Nenhum projeto encontrado no Firebase');
           }
         } catch (error) {
-          console.warn('⚠️ Erro ao carregar projetos do Firebase, tentando localStorage');
           const savedProjects = localStorage.getItem('dev_portfolio_projects');
           if (savedProjects) {
             setProjects(JSON.parse(savedProjects));
@@ -95,21 +86,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               email: contactData.email,
               location: contactData.location,
             });
-            console.log('✅ Informações de contato carregadas do Firebase');
           }
         } catch (error) {
-          console.warn('⚠️ Erro ao carregar contato do Firebase, tentando localStorage');
           const savedContact = localStorage.getItem('dev_portfolio_contact');
           if (savedContact) {
             setContactInfo(JSON.parse(savedContact));
           }
         }
         
-        // Marca que carregou do Firebase
-        setIsFirebaseLoaded(true);
       } catch (error) {
-        console.error('❌ Erro geral ao carregar dados:', error);
-        setIsFirebaseLoaded(true);
+        console.error('Erro ao carregar dados:', error);
       } finally {
         setIsLoading(false);
       }
@@ -118,20 +104,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadData();
 
     // Configurar listeners em tempo real para sincronização
-    console.log('🔄 Configurando listeners em tempo real...');
     
     const unsubscribeProfile = profileServiceRTDB.listenToProfile((profileData) => {
       if (profileData?.url) {
         setProfileImage(profileData.url);
         localStorage.setItem('dev_portfolio_image', profileData.url);
-        console.log('🔔 Imagem de perfil atualizada via listener');
       }
     });
 
     const unsubscribeProjects = projectsServiceRTDB.listenToProjects((projectsData) => {
       setProjects(projectsData);
       localStorage.setItem('dev_portfolio_projects', JSON.stringify(projectsData));
-      console.log('🔔 Projetos atualizados via listener:', projectsData.length);
     });
 
     const unsubscribeContact = contactServiceRTDB.listenToContact((contactData) => {
@@ -144,13 +127,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           location: contactData.location,
         });
         localStorage.setItem('dev_portfolio_contact', JSON.stringify(contactData));
-        console.log('🔔 Informações de contato atualizadas via listener');
       }
     });
 
     // Cleanup listeners ao desmontar
     return () => {
-      console.log('🧹 Limpando listeners...');
       unsubscribeProfile();
       unsubscribeProjects();
       unsubscribeContact();

@@ -12,17 +12,6 @@ const firebaseConfig = {
   appId: (import.meta.env.VITE_FIREBASE_APP_ID as string) || '',
 };
 
-// Log de debug para verificar se as variáveis estão carregadas
-console.log('🔍 Firebase Config Check:', {
-  apiKey: firebaseConfig.apiKey ? '✅ Configurado' : '❌ Vazio',
-  authDomain: firebaseConfig.authDomain ? '✅ Configurado' : '❌ Vazio',
-  projectId: firebaseConfig.projectId ? '✅ Configurado' : '❌ Vazio',
-  databaseURL: firebaseConfig.databaseURL ? '✅ Configurado' : '❌ Vazio',
-  storageBucket: firebaseConfig.storageBucket ? '✅ Configurado' : '❌ Vazio',
-  messagingSenderId: firebaseConfig.messagingSenderId ? '✅ Configurado' : '❌ Vazio',
-  appId: firebaseConfig.appId ? '✅ Configurado' : '❌ Vazio',
-});
-
 // Initialize Firebase apenas se houver configuração completa
 let app: any = null;
 let db: any = null;
@@ -33,22 +22,11 @@ if (isConfigured) {
   try {
     app = initializeApp(firebaseConfig);
     db = getDatabase(app);
-    console.log('✅ Firebase inicializado com sucesso!');
   } catch (error: any) {
-    console.error('❌ Erro ao inicializar Firebase:', error.message);
+    console.error('Erro ao inicializar Firebase:', error.message);
   }
 } else {
-  console.error('❌ Firebase NÃO CONFIGURADO! Verifique as variáveis de ambiente:');
-  console.error('   - projectId:', firebaseConfig.projectId ? 'OK' : 'FALTANDO');
-  console.error('   - databaseURL:', firebaseConfig.databaseURL ? 'OK' : 'FALTANDO');
-  console.error('\nVariáveis necessárias no .env ou Vercel:');
-  console.error('   VITE_FIREBASE_API_KEY');
-  console.error('   VITE_FIREBASE_AUTH_DOMAIN');
-  console.error('   VITE_FIREBASE_PROJECT_ID');
-  console.error('   VITE_FIREBASE_DATABASE_URL');
-  console.error('   VITE_FIREBASE_STORAGE_BUCKET');
-  console.error('   VITE_FIREBASE_MESSAGING_SENDER_ID');
-  console.error('   VITE_FIREBASE_APP_ID');
+  console.error('Firebase não configurado. Configure as variáveis de ambiente.');
 }
 
 export { db };
