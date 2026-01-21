@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Project } from '../types';
 import { PROJECTS as INITIAL_PROJECTS, CONTACT_INFO as INITIAL_CONTACT_INFO } from '../constants';
-import { projectsServiceRTDB, contactServiceRTDB, profileServiceRTDB } from '../services/firebaseRealtimeService';
+import { projectsServiceRTDB, contactServiceRTDB, profileServiceRTDB, cleanupListeners } from '../services/firebaseRealtimeService';
 
 // Inicializar Firebase de forma segura
 try {
@@ -45,43 +45,38 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Estado de carregamento
   const [, setIsLoading] = useState(true);
 
-  // Carregar dados do Firebase ao iniciar
+  // Carregar dados do Firebase ao iniciar e escutar mudanças em tempo real
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
 
-        // Tentar carregar do Firebase, com fallback para localStorage
+        // Carregar imagem de perfil inicial
         try {
-          // Carregar imagem de perfil
           const profileData = await profileServiceRTDB.get();
           if (profileData?.url) {
             setProfileImage(profileData.url);
-          } else {
-            throw new Error('Firebase não disponível');
           }
-        } catch {
+        } catch (error) {
           const savedImage = localStorage.getItem('dev_portfolio_image');
           if (savedImage) setProfileImage(savedImage);
         }
 
+        // Carregar projetos inicial
         try {
-          // Carregar projetos
           const projectsData = await projectsServiceRTDB.getAll();
           if (projectsData && projectsData.length > 0) {
             setProjects(projectsData);
-          } else {
-            throw new Error('Firebase não disponível');
           }
-        } catch {
+        } catch (error) {
           const savedProjects = localStorage.getItem('dev_portfolio_projects');
           if (savedProjects) {
             setProjects(JSON.parse(savedProjects));
           }
         }
 
+        // Carregar informações de contato inicial
         try {
-          // Carregar informações de contato
           const contactData = await contactServiceRTDB.get();
           if (contactData) {
             setContactInfo({
@@ -91,10 +86,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               email: contactData.email,
               location: contactData.location,
             });
-          } else {
-            throw new Error('Firebase não disponível');
           }
-        } catch {
+        } catch (error) {
           const savedContact = localStorage.getItem('dev_portfolio_contact');
           if (savedContact) {
             setContactInfo(JSON.parse(savedContact));
@@ -102,30 +95,54 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
-        // Fallback para localStorage se tudo falhar
-        const savedImage = localStorage.getItem('dev_portfolio_image');
-        const savedProjects = localStorage.getItem('dev_portfolio_projects');
-        const savedContact = localStorage.getItem('dev_portfolio_contact');
-
-        if (savedImage) setProfileImage(savedImage);
-        if (savedProjects) setProjects(JSON.parse(savedProjects));
-        if (savedContact) setContactInfo(JSON.parse(savedContact));
       } finally {
         setIsLoading(false);
       }
     };
 
     loadData();
+
+    // Configurar listeners em tempo real para sincronização
+    const unsubscribeProfile = profileServiceRTDB.listenToProfile((profileData) => {
+      if (profileData?.url) {
+        setProfileImage(profileData.url);
+        localStorage.setItem('dev_portfolio_image', profileData.url);
+      }
+    });
+
+    const unsubscribeProjects = projectsServiceRTDB.listenToProjects((projectsData) => {
+      setProjects(projectsData);
+      localStorage.setItem('dev_portfolio_projects', JSON.stringify(projectsData));
+    });
+
+    const unsubscribeContact = contactServiceRTDB.listenToContact((contactData) => {
+      if (contactData) {
+        setContactInfo({
+          name: contactData.name,
+          role: contactData.role,
+          whatsappNumber: contactData.whatsappNumber,
+          email: contactData.email,
+          location: contactData.location,
+        });
+        localStorage.setItem('dev_portfolio_contact', JSON.stringify(contactData));
+      }
+    });
+
+    // Cleanup listeners ao desmontar
+    return () => {
+      unsubscribeProfile();
+      unsubscribeProjects();
+      unsubscribeContact();
+    };
   }, []);
 
   const updateProfileImage = async (url: string) => {
     try {
       setProfileImage(url);
       await profileServiceRTDB.update(url);
-      localStorage.setItem('dev_portfolio_image', url);
     } catch (error) {
       console.error('Erro ao atualizar imagem:', error);
-      localStorage.setItem('dev_portfolio_image', url);
+      // Não usa localStorage como fallback - dados devem vir do Firebase
     }
   };
 
@@ -134,10 +151,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const newInfo = { ...contactInfo, ...info };
       setContactInfo(newInfo);
       await contactServiceRTDB.update(newInfo);
-      localStorage.setItem('dev_portfolio_contact', JSON.stringify(newInfo));
     } catch (error) {
       console.error('Erro ao atualizar contato:', error);
-      localStorage.setItem('dev_portfolio_contact', JSON.stringify({ ...contactInfo, ...info }));
+      // Não usa localStorage como fallback - dados devem vir do Firebase
     }
   };
 
@@ -148,12 +164,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const newProject = { ...projectData, id: newId };
       const updatedProjects = [newProject, ...projects];
       setProjects(updatedProjects);
-      localStorage.setItem('dev_portfolio_projects', JSON.stringify(updatedProjects));
     } catch (error) {
       console.error('Erro ao adicionar projeto:', error);
-      const updatedProjects = [project, ...projects];
-      setProjects(updatedProjects);
-      localStorage.setItem('dev_portfolio_projects', JSON.stringify(updatedProjects));
+      // Não usa localStorage como fallback - dados devem vir do Firebase
     }
   };
 
@@ -162,12 +175,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await projectsServiceRTDB.update(updatedProject.id, updatedProject);
       const updatedProjects = projects.map(p => p.id === updatedProject.id ? updatedProject : p);
       setProjects(updatedProjects);
-      localStorage.setItem('dev_portfolio_projects', JSON.stringify(updatedProjects));
     } catch (error) {
       console.error('Erro ao atualizar projeto:', error);
-      const updatedProjects = projects.map(p => p.id === updatedProject.id ? updatedProject : p);
-      setProjects(updatedProjects);
-      localStorage.setItem('dev_portfolio_projects', JSON.stringify(updatedProjects));
+      // Não usa localStorage como fallback - dados devem vir do Firebase
     }
   };
 
@@ -176,12 +186,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await projectsServiceRTDB.delete(id);
       const updatedProjects = projects.filter(p => p.id !== id);
       setProjects(updatedProjects);
-      localStorage.setItem('dev_portfolio_projects', JSON.stringify(updatedProjects));
     } catch (error) {
       console.error('Erro ao deletar projeto:', error);
-      const updatedProjects = projects.filter(p => p.id !== id);
-      setProjects(updatedProjects);
-      localStorage.setItem('dev_portfolio_projects', JSON.stringify(updatedProjects));
+      // Não usa localStorage como fallback - dados devem vir do Firebase
     }
   };
 

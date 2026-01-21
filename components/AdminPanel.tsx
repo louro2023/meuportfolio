@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
-import { X, Upload, Plus, Trash2, Image as ImageIcon, Pencil, Save, Phone, MapPin } from 'lucide-react';
+import { X, Upload, Plus, Trash2, Image as ImageIcon, Pencil, Save, Phone, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
 import { Project } from '../types';
 
 interface AdminPanelProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface Toast {
+  message: string;
+  type: 'success' | 'error';
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
@@ -22,9 +27,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   } = useData();
   
   const [activeTab, setActiveTab] = useState<'profile' | 'projects'>('profile');
-
-  // Estado para controle de edição de projetos
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Estados do formulário de projeto
   const [formProject, setFormProject] = useState<Partial<Project>>({
@@ -39,12 +44,25 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setIsSaving(true);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        updateProfileImage(reader.result as string);
+      reader.onloadend = async () => {
+        try {
+          await updateProfileImage(reader.result as string);
+          showToast('✓ Foto de perfil atualizada com sucesso!', 'success');
+        } catch (error) {
+          showToast('✗ Erro ao atualizar foto. Tente novamente.', 'error');
+        } finally {
+          setIsSaving(false);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -73,16 +91,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
   const handleDeleteClick = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este projeto?')) {
+      setIsSaving(true);
       deleteProject(id);
+      showToast('✓ Projeto excluído com sucesso!', 'success');
       if (editingId === id) {
         handleCancelEdit();
       }
+      setIsSaving(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formProject.title || !formProject.shortDescription) return;
+
+    setIsSaving(true);
 
     const projectData: Project = {
       id: editingId || Date.now().toString(),
@@ -94,19 +117,40 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
       type: formProject.type as any || 'Web System'
     };
 
-    if (editingId) {
-      updateProject(projectData);
-      alert('Projeto atualizado com sucesso!');
-    } else {
-      addProject(projectData);
-      alert('Projeto adicionado com sucesso!');
+    try {
+      if (editingId) {
+        await updateProject(projectData);
+        showToast('✓ Projeto atualizado com sucesso!', 'success');
+      } else {
+        await addProject(projectData);
+        showToast('✓ Projeto adicionado com sucesso!', 'success');
+      }
+    } catch (error) {
+      showToast('✗ Erro ao salvar projeto. Tente novamente.', 'error');
+    } finally {
+      setIsSaving(false);
+      handleCancelEdit();
     }
-    
-    handleCancelEdit();
   };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-[101] flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg animate-in fade-in slide-in-from-top-2 ${
+          toast.type === 'success' 
+            ? 'bg-green-100 text-green-800 border border-green-300' 
+            : 'bg-red-100 text-red-800 border border-red-300'
+        }`}>
+          {toast.type === 'success' ? (
+            <CheckCircle size={20} />
+          ) : (
+            <AlertCircle size={20} />
+          )}
+          <span className="font-medium">{toast.message}</span>
+        </div>
+      )}
+
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col">
         
         {/* Header */}
@@ -157,7 +201,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-primary-300 rounded-xl bg-primary-50 cursor-pointer hover:bg-primary-100 transition-colors">
                     <Upload size={24} className="text-primary-600 mb-2" />
                     <span className="text-sm font-medium text-primary-700">Upload Imagem</span>
-                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={handleImageUpload}
+                      disabled={isSaving}
+                    />
                   </label>
                   
                   <div className="flex flex-col gap-2">
@@ -184,8 +234,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                       type="text"
                       value={contactInfo.whatsappNumber}
                       onChange={(e) => updateContactInfo({ whatsappNumber: e.target.value })}
+                      onBlur={() => showToast('✓ WhatsApp atualizado!', 'success')}
                       placeholder="Ex: 5521999999999"
-                      className="w-full pl-10 p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                      className="w-full pl-10 p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                     />
                   </div>
                   <p className="text-xs text-slate-500">Isso atualizará todos os botões de "Conversar no WhatsApp" do site.</p>
@@ -199,8 +250,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                       type="text"
                       value={contactInfo.location}
                       onChange={(e) => updateContactInfo({ location: e.target.value })}
+                      onBlur={() => showToast('✓ Localização atualizada!', 'success')}
                       placeholder="Ex: São Paulo, SP"
-                      className="w-full pl-10 p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                      className="w-full pl-10 p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -300,9 +352,27 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
                   <button 
                     type="submit"
-                    className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg transition-colors font-medium mt-4 text-white ${editingId ? 'bg-primary-600 hover:bg-primary-700' : 'bg-green-600 hover:bg-green-700'}`}
+                    disabled={isSaving}
+                    className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg transition-colors font-medium mt-4 text-white ${
+                      isSaving 
+                        ? 'bg-slate-400 cursor-not-allowed' 
+                        : editingId 
+                          ? 'bg-primary-600 hover:bg-primary-700' 
+                          : 'bg-green-600 hover:bg-green-700'
+                    }`}
                   >
-                    {editingId ? <><Save size={20} /> Salvar Alterações</> : <><Plus size={20} /> Adicionar Projeto</>}
+                    {isSaving ? (
+                      <>
+                        <div className="animate-spin">
+                          <Upload size={20} />
+                        </div>
+                        Salvando...
+                      </>
+                    ) : editingId ? (
+                      <><Save size={20} /> Salvar Alterações</>
+                    ) : (
+                      <><Plus size={20} /> Adicionar Projeto</>
+                    )}
                   </button>
                 </form>
               </div>
