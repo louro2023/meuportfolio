@@ -33,7 +33,7 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Estado da Imagem de Perfil
+  // Estado da Imagem de Perfil - começa com padrão, vai ser atualizado do Firebase
   const [profileImage, setProfileImage] = useState<string>('/profile.jpg');
   
   // Estado dos Projetos
@@ -44,6 +44,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Estado de carregamento
   const [, setIsLoading] = useState(true);
+  
+  // Estado para rastrear se já carregou do Firebase (evita flicker)
+  const [isFirebaseLoaded, setIsFirebaseLoaded] = useState(false);
 
   // Carregar dados do Firebase ao iniciar e escutar mudanças em tempo real
   useEffect(() => {
@@ -101,8 +104,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setContactInfo(JSON.parse(savedContact));
           }
         }
+        
+        // Marca que carregou do Firebase
+        setIsFirebaseLoaded(true);
       } catch (error) {
         console.error('❌ Erro geral ao carregar dados:', error);
+        setIsFirebaseLoaded(true);
       } finally {
         setIsLoading(false);
       }
