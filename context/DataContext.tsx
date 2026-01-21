@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Project } from '../types';
 import { PROJECTS as INITIAL_PROJECTS, CONTACT_INFO as INITIAL_CONTACT_INFO } from '../constants';
-import { projectsServiceRTDB, contactServiceRTDB, profileServiceRTDB, cleanupListeners } from '../services/firebaseRealtimeService';
+import { projectsServiceRTDB, contactServiceRTDB, profileServiceRTDB } from '../services/firebaseRealtimeService';
 
 // Inicializar Firebase de forma segura
 try {
