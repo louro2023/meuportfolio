@@ -56,26 +56,22 @@ const Hero: React.FC = () => {
 
         {/* Image Content */}
         <div className="flex-1 flex justify-center order-1 md:order-2">
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary-200 rounded-full blur-3xl opacity-30 animate-pulse"></div>
-            
-            <img 
-              src={profileImage} 
-              alt={contactInfo.name} 
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.onerror = null;
-                // Fallback apenas se a imagem dinâmica falhar
-                target.src = "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800";
-              }}
-              className="relative w-64 h-64 md:w-80 md:h-80 rounded-full object-cover border-4 border-white shadow-2xl"
-            />
-            {/* Floating badge */}
-            <div className="absolute bottom-4 right-4 md:bottom-8 md:right-0 bg-white p-3 rounded-lg shadow-lg border border-slate-100 flex items-center gap-3">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-semibold text-slate-700">Online Agora</span>
+          {profileImage && (
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary-200 rounded-full blur-3xl opacity-30 animate-pulse"></div>
+              
+              <img 
+                src={profileImage} 
+                alt={contactInfo.name} 
+                className="relative w-64 h-64 md:w-80 md:h-80 rounded-full object-cover border-4 border-white shadow-2xl"
+              />
+              {/* Floating badge */}
+              <div className="absolute bottom-4 right-4 md:bottom-8 md:right-0 bg-white p-3 rounded-lg shadow-lg border border-slate-100 flex items-center gap-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-semibold text-slate-700">Online Agora</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
       </div>
