@@ -47,64 +47,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Carregar dados do Firebase ao iniciar e escutar mudanças em tempo real
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-
-        // Carregar imagem de perfil inicial
-        try {
-          const profileData = await profileServiceRTDB.get();
-          if (profileData?.url) {
-            setProfileImage(profileData.url);
-          }
-        } catch (error) {
-          const savedImage = localStorage.getItem('dev_portfolio_image');
-          if (savedImage) setProfileImage(savedImage);
-        }
-
-        // Carregar projetos inicial
-        try {
-          const projectsData = await projectsServiceRTDB.getAll();
-          if (projectsData && projectsData.length > 0) {
-            setProjects(projectsData);
-          }
-        } catch (error) {
-          const savedProjects = localStorage.getItem('dev_portfolio_projects');
-          if (savedProjects) {
-            setProjects(JSON.parse(savedProjects));
-          }
-        }
-
-        // Carregar informações de contato inicial
-        try {
-          const contactData = await contactServiceRTDB.get();
-          if (contactData) {
-            setContactInfo({
-              name: contactData.name,
-              role: contactData.role,
-              whatsappNumber: contactData.whatsappNumber,
-              email: contactData.email,
-              location: contactData.location,
-            });
-          }
-        } catch (error) {
-          const savedContact = localStorage.getItem('dev_portfolio_contact');
-          if (savedContact) {
-            setContactInfo(JSON.parse(savedContact));
-          }
-        }
-        
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-
-    // Configurar listeners em tempo real para sincronização
-    
+    // Configurar listeners PRIMEIRO (disparam imediatamente com dados do Firebase)
     const unsubscribeProfile = profileServiceRTDB.listenToProfile((profileData) => {
       if (profileData?.url) {
         setProfileImage(profileData.url);
@@ -130,8 +73,28 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     });
 
+    // Fallback: carregar do localStorage se os listeners não trouxerem dados em tempo
+    const loadLocalStorage = () => {
+      const savedImage = localStorage.getItem('dev_portfolio_image');
+      if (savedImage) setProfileImage(savedImage);
+
+      const savedProjects = localStorage.getItem('dev_portfolio_projects');
+      if (savedProjects) setProjects(JSON.parse(savedProjects));
+
+      const savedContact = localStorage.getItem('dev_portfolio_contact');
+      if (savedContact) setContactInfo(JSON.parse(savedContact));
+    };
+
+    // Tentar localStorage como fallback se Firebase falhar
+    const timeout = setTimeout(() => {
+      loadLocalStorage();
+    }, 100);
+
+    setIsLoading(false);
+
     // Cleanup listeners ao desmontar
     return () => {
+      clearTimeout(timeout);
       unsubscribeProfile();
       unsubscribeProjects();
       unsubscribeContact();
