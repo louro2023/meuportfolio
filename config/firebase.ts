@@ -12,17 +12,21 @@ const firebaseConfig = {
   appId: (import.meta.env.VITE_FIREBASE_APP_ID as string) || '',
 };
 
-// Initialize Firebase apenas se houver configuração
+// Initialize Firebase apenas se houver configuração completa
 let app: any = null;
 let db: any = null;
 
-try {
-  if (firebaseConfig.projectId) {
+const isConfigured = firebaseConfig.projectId && firebaseConfig.databaseURL;
+
+if (isConfigured) {
+  try {
     app = initializeApp(firebaseConfig);
     db = getDatabase(app);
+  } catch (error) {
+    console.warn('Erro ao inicializar Firebase:', error);
   }
-} catch (error) {
-  console.warn('Firebase não configurado. Usando localStorage como fallback.');
+} else {
+  console.info('Firebase não configurado. Configure as variáveis de ambiente para usar.');
 }
 
 export { db };

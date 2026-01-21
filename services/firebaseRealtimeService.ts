@@ -28,7 +28,7 @@ export interface ProfileImageRTDB {
 export const projectsServiceRTDB = {
   async getAll(): Promise<Project[]> {
     try {
-      if (!db) throw new Error('Firebase não configurado');
+      if (!db) return [];
       const snapshot = await get(ref(db, 'projects'));
       if (!snapshot.exists()) {
         return [];
@@ -39,7 +39,7 @@ export const projectsServiceRTDB = {
         ...project,
       } as Project));
     } catch (error) {
-      console.error('Erro ao buscar projetos:', error);
+      console.debug('Firebase: projetos não disponíveis, usando localStorage');
       throw error;
     }
   },
@@ -56,7 +56,7 @@ export const projectsServiceRTDB = {
       });
       return newProjectRef.key || '';
     } catch (error) {
-      console.error('Erro ao adicionar projeto:', error);
+      console.debug('Firebase: erro ao adicionar projeto');
       throw error;
     }
   },
@@ -69,7 +69,7 @@ export const projectsServiceRTDB = {
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Erro ao atualizar projeto:', error);
+      console.debug('Firebase: erro ao atualizar projeto');
       throw error;
     }
   },
@@ -79,7 +79,7 @@ export const projectsServiceRTDB = {
       if (!db) throw new Error('Firebase não configurado');
       await remove(ref(db, `projects/${id}`));
     } catch (error) {
-      console.error('Erro ao deletar projeto:', error);
+      console.debug('Firebase: erro ao deletar projeto');
       throw error;
     }
   },
@@ -89,14 +89,14 @@ export const projectsServiceRTDB = {
 export const contactServiceRTDB = {
   async get(): Promise<ContactInfoRTDB | null> {
     try {
-      if (!db) throw new Error('Firebase não configurado');
+      if (!db) return null;
       const snapshot = await get(ref(db, 'portfolio/contactInfo'));
       if (snapshot.exists()) {
         return snapshot.val() as ContactInfoRTDB;
       }
       return null;
     } catch (error) {
-      console.error('Erro ao buscar informações de contato:', error);
+      console.debug('Firebase: informações de contato não disponíveis');
       throw error;
     }
   },
@@ -109,7 +109,7 @@ export const contactServiceRTDB = {
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Erro ao atualizar informações de contato:', error);
+      console.debug('Firebase: erro ao atualizar contato');
       throw error;
     }
   },
@@ -119,14 +119,14 @@ export const contactServiceRTDB = {
 export const profileServiceRTDB = {
   async get(): Promise<ProfileImageRTDB | null> {
     try {
-      if (!db) throw new Error('Firebase não configurado');
+      if (!db) return null;
       const snapshot = await get(ref(db, 'portfolio/profileImage'));
       if (snapshot.exists()) {
         return snapshot.val() as ProfileImageRTDB;
       }
       return null;
     } catch (error) {
-      console.error('Erro ao buscar imagem de perfil:', error);
+      console.debug('Firebase: imagem de perfil não disponível');
       throw error;
     }
   },
@@ -139,7 +139,7 @@ export const profileServiceRTDB = {
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Erro ao atualizar imagem de perfil:', error);
+      console.debug('Firebase: erro ao atualizar imagem');
       throw error;
     }
   },
