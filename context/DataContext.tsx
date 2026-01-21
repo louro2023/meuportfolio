@@ -33,8 +33,8 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Estado da Imagem de Perfil - começa com padrão, vai ser atualizado do Firebase
-  const [profileImage, setProfileImage] = useState<string>('/profile.jpg');
+  // Estado da Imagem de Perfil - começa vazia, será carregada apenas do Firebase/AdminPanel
+  const [profileImage, setProfileImage] = useState<string>('');
   
   // Estado dos Projetos
   const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
@@ -199,7 +199,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('dev_portfolio_projects');
     localStorage.removeItem('dev_portfolio_contact');
     
-    setProfileImage('/profile.jpg');
+    setProfileImage('');
     setProjects(INITIAL_PROJECTS);
     setContactInfo(INITIAL_CONTACT_INFO);
     
