@@ -119,14 +119,18 @@ export const projectsServiceRTDB = {
       if (!db) throw new Error('Firebase não configurado');
       const projectsRef = ref(db, 'projects');
       const newProjectRef = push(projectsRef);
+      const newId = newProjectRef.key || '';
+      
       await set(newProjectRef, {
         ...project,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      return newProjectRef.key || '';
-    } catch (error) {
-      console.debug('Firebase: erro ao adicionar projeto');
+      
+      console.log('✅ Projeto adicionado com sucesso no Firebase:', newId);
+      return newId;
+    } catch (error: any) {
+      console.error('❌ Erro ao adicionar projeto no Firebase:', error.message, error);
       throw error;
     }
   },
@@ -138,8 +142,9 @@ export const projectsServiceRTDB = {
         ...project,
         updatedAt: serverTimestamp(),
       });
-    } catch (error) {
-      console.debug('Firebase: erro ao atualizar projeto');
+      console.log('✅ Projeto atualizado com sucesso no Firebase:', id);
+    } catch (error: any) {
+      console.error('❌ Erro ao atualizar projeto no Firebase:', error.message, error);
       throw error;
     }
   },
@@ -148,8 +153,9 @@ export const projectsServiceRTDB = {
     try {
       if (!db) throw new Error('Firebase não configurado');
       await remove(ref(db, `projects/${id}`));
-    } catch (error) {
-      console.debug('Firebase: erro ao deletar projeto');
+      console.log('✅ Projeto deletado com sucesso no Firebase:', id);
+    } catch (error: any) {
+      console.error('❌ Erro ao deletar projeto no Firebase:', error.message, error);
       throw error;
     }
   },
@@ -204,8 +210,9 @@ export const contactServiceRTDB = {
         ...data,
         updatedAt: serverTimestamp(),
       });
-    } catch (error) {
-      console.debug('Firebase: erro ao atualizar contato');
+      console.log('✅ Informações de contato atualizadas no Firebase');
+    } catch (error: any) {
+      console.error('❌ Erro ao atualizar contato no Firebase:', error.message, error);
       throw error;
     }
   },
@@ -260,8 +267,9 @@ export const profileServiceRTDB = {
         url,
         updatedAt: serverTimestamp(),
       });
-    } catch (error) {
-      console.debug('Firebase: erro ao atualizar imagem');
+      console.log('✅ Imagem de perfil atualizada no Firebase:', url.substring(0, 50) + '...');
+    } catch (error: any) {
+      console.error('❌ Erro ao atualizar imagem no Firebase:', error.message, error);
       throw error;
     }
   },
