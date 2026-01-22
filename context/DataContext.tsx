@@ -56,8 +56,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     const unsubscribeProjects = projectsServiceRTDB.listenToProjects((projectsData) => {
-      setProjects(projectsData);
-      localStorage.setItem('dev_portfolio_projects', JSON.stringify(projectsData));
+      // Só atualiza projetos se houver dados do Firebase
+      if (projectsData && projectsData.length > 0) {
+        setProjects(projectsData);
+        localStorage.setItem('dev_portfolio_projects', JSON.stringify(projectsData));
+      }
+      // Se Firebase retornar vazio, mantém os INITIAL_PROJECTS
     });
 
     const unsubscribeContact = contactServiceRTDB.listenToContact((contactData) => {
