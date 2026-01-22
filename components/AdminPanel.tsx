@@ -335,13 +335,36 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">URL da Imagem (Capa)</label>
-                    <div className="flex gap-2">
-                      <div className="flex-1 relative">
+                    <label className="text-sm font-medium text-slate-700">Imagem do Projeto (Capa)</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* Upload */}
+                      <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-primary-300 rounded-lg bg-primary-50 cursor-pointer hover:bg-primary-100 transition-colors">
+                        <Upload size={20} className="text-primary-600 mb-2" />
+                        <span className="text-xs font-medium text-primary-700 text-center">Upload Imagem</span>
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setFormProject({...formProject, imageUrl: reader.result as string});
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          disabled={isSaving}
+                        />
+                      </label>
+                      
+                      {/* URL */}
+                      <div className="relative">
                         <ImageIcon size={18} className="absolute left-3 top-3 text-slate-400" />
                         <input 
                           type="text" 
-                          placeholder="https://..."
+                          placeholder="Ou cole uma URL (https://...)"
                           className="w-full pl-10 p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
                           value={formProject.imageUrl}
                           onChange={e => setFormProject({...formProject, imageUrl: e.target.value})}
