@@ -61,8 +61,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setProjects(projectsData);
         localStorage.setItem('dev_portfolio_projects', JSON.stringify(projectsData));
       } else {
-        // Se Firebase estiver vazio, mantém INITIAL_PROJECTS
-        setProjects(INITIAL_PROJECTS);
+        // Se Firebase estiver vazio, exibe array vazio (sem projetos padrões)
+        setProjects([]);
       }
     });
 
