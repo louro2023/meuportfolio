@@ -18,7 +18,7 @@ export const CONTACT_INFO = {
   name: "Henrique Louro",
   role: "Desenvolvedor Full Stack & Especialista em Sistemas",
   whatsappNumber: "5521981682922", // Format for API: CountryCode+AreaCode+Number
-  email: "contato@henriquelouro.com",
+  email: "henrique-louro@hotmail.com",
   location: "São Paulo, SP"
 };
 
